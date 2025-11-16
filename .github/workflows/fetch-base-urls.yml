@@ -1,8 +1,11 @@
 name: Fetch Base URLs
 
+permissions:
+  contents: write
+
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -18,10 +23,13 @@ jobs:
           python FetchBaseUrls.py
       - name: Commit changes
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet; then
-            git add BaseURLs.txt
+          git add BaseURLs.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
             git commit -m "Update BaseURLs.txt"
             git push
           fi
